@@ -16,6 +16,7 @@ Check for project manifests and load the corresponding rule files:
 | `package.json` | JavaScript (+ React if a dep) | `.claude/rules/languages/javascript.md` (+ `javascript-react.md`) |
 | `tsconfig.json` | TypeScript (+ React if a dep) | `.claude/rules/languages/typescript.md` (+ `typescript-react.md`) |
 | `pyproject.toml` / `requirements.txt` | Python | `.claude/rules/languages/python.md` |
+| `mix.exs` | Elixir (+ Phoenix if a dep) | `.claude/rules/languages/elixir.md` (+ `elixir-phoenix.md`) |
 
 Only read rule files for languages actually detected in this project. `shell.md` has no manifest to detect — load it when editing shell scripts (`*.sh`).
 
