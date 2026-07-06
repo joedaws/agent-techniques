@@ -3,7 +3,8 @@
 #### Code Style
 - Follow PEP 8 style guide
 - Use type hints for function signatures
-- Use `black` for formatting, `ruff` or `flake8` for linting
+- Look for and use justfile or Makefile helpers when doing linting and formatting
+- If none exist Use `black` for formatting, `ruff` or `flake8` for linting
 - Prefer `pathlib.Path` over `os.path` for path operations
 - Use context managers (`with`) for file operations
 
@@ -34,11 +35,12 @@ def read_config(path):
 - Validate and sanitize all external input
 
 #### Dependencies
-- Pin dependency versions in `requirements.txt`
-- Use virtual environments (`venv` or `poetry`)
+- prefer using `pyproject.toml` to manage dependencies and keep application repo
+  dependencies tight but not exact.
 - Run `pip-audit` to check for vulnerabilities
 
 #### Testing
-- Use `pytest` for testing
+- look for justfile or Taskfile commands before running tests directly.
+- If no helpers exist use `pytest` for testing
 - Aim for high coverage with `pytest-cov`
 - Mock external dependencies with `unittest.mock`
