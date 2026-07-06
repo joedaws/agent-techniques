@@ -53,6 +53,17 @@ Task fully done:
 task <id> done
 ```
 
+## Reference design/plan docs in handoffs
+
+If this task's work went through the superpowers `brainstorming`/`writing-plans`
+skills, they'll have written a design and/or plan doc under
+`docs/superpowers/specs/` or `docs/superpowers/plans/`. Point to those paths in the
+handoff so a resuming agent doesn't have to rediscover them:
+
+```bash
+task <id> annotate "handoff: done=<...>, next=<...>, traps=<...>, docs=docs/superpowers/plans/<file>.md"
+```
+
 ## Convention
 
 Prefix annotations with `handoff:`, `decision:`, or `gotcha:` — nothing

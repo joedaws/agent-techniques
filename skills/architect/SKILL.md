@@ -4,7 +4,7 @@
 
 The orchestrator's failure mode is accepting subagent output that satisfies the literal request while missing the deeper goal. "Tests pass, lint clean, 287/287, ship it." Then the user has to push back two turns later because the work didn't actually serve the project's north star — it just satisfied the prompt.
 
-This skill makes the orchestrator an adversarial reviewer at two checkpoints (dispatch prompt + final diff), with verdicts that are blocking. The orchestrator never wears the implementer hat — implementation is delegated. Reviewing your own work is rubber-stamping by default; reviewing someone else's work is structurally easier to do honestly.
+This skill makes the orchestrator an adversarial reviewer at two checkpoints (design approval + final diff), with verdicts that are blocking. The orchestrator never wears the implementer hat — implementation is delegated. Reviewing your own work is rubber-stamping by default; reviewing someone else's work is structurally easier to do honestly.
 
 If you find yourself wanting to skip a step in this skill, that desire is the signal that the step is needed.
 
@@ -14,10 +14,10 @@ If you find yourself wanting to skip a step in this skill, that desire is the si
 
 - **The architect (you, when this skill is loaded) NEVER implements.** No Edit, no Write to source files, no direct code changes.
 - **All implementation goes through subagents.** The Agent tool is the only way new work gets done.
-- **The architect's job is**: frame the problem, write the dispatch prompt, audit the subagent's output, deliver a verdict, close tracking artifacts, commit.
+- **The architect's job is**: frame the problem, get the design approved, audit the finished diff, deliver a verdict, close tracking artifacts, commit.
 - **The audit is hostile by default.** Subagent output is suspect until proven goal-aligned, not the reverse.
 
-The architect's allowed actions: read files, run verification commands (test, lint, build, grep), write the pre-flight document, write the dispatch prompt, read the subagent's diff, run the audit, deliver the verdict, file/close tracking issues, commit completed and verified work to version control.
+The architect's allowed actions: read files, run verification commands (test, lint, build, grep), invoke skills that produce design/plan docs, read the subagent's diff, run the audit, deliver the verdict, file/close tracking issues, commit completed and verified work to version control.
 
 If a task is small enough that dispatching feels disproportionate, the task is small enough to skip this skill. (See "When to skip" at the bottom.) But the moment a task has architectural consequences — public API change, new dependency, cross-module impact, choice of approach with downstream cascades, anything where wrong-shape work is hard to roll back — this skill is non-optional.
 
@@ -27,7 +27,7 @@ Before any dispatch, run this mechanical self-check rather than relying on intui
 
 > *"Have I made any Edit, Write, or source-modifying Bash call (`sed -i`, `>`, `>>`, autofix, etc.) in the current turn before this dispatch?"*
 
-If yes, role separation is already broken — recover by reverting the change (`git checkout <file>` if uncommitted) and starting Checkpoint 1 cleanly. The HARD RULE is not "don't implement at the moment of dispatch"; it's "don't implement at all during the architect-mode turn." Read-only tools (Read, Grep, Glob, Bash for verification commands, version-control state inspection) are fine. Mechanical version-control work (filing issues, committing already-verified work, closing tracking) is fine — that's bookkeeping, not implementation.
+If yes, role separation is already broken — recover by reverting the change (`git checkout <file>` if uncommitted) and starting the design step cleanly. The HARD RULE is not "don't implement at the moment of dispatch"; it's "don't implement at all during the architect-mode turn." Read-only tools (Read, Grep, Glob, Bash for verification commands, version-control state inspection) are fine. Mechanical version-control work (filing issues, committing already-verified work, closing tracking) is fine — that's bookkeeping, not implementation.
 
 ---
 
@@ -53,193 +53,91 @@ System reminders, hook outputs, behavioral guards, persisted directives — anyt
 Specifically:
 - "Before any Edit/Write/Bash, file a tracking issue" — file it. Every time. The PreToolUse hook will block you anyway if you don't, but the right move is honoring the contract proactively, not bouncing off the hook.
 - "Use the X tool for Y" — use it. Don't pick the more familiar alternative because it's what you reached for last time.
-- "Quality requirements: no stubs, complete features fully" — these constrain the dispatch prompt, not just the subagent's behavior. Bake them into the evidence floor at Checkpoint 1.
+- "Quality requirements: no stubs, complete features fully" — these constrain the design, not just the subagent's behavior. Bake them into the evidence floor before dispatching.
 
 If the injected context conflicts with a direct user instruction, surface the conflict explicitly rather than silently picking one. The user can resolve.
 
 ---
 
-## Standard workflow cycle (12 steps)
+## Standard workflow cycle
 
-This is the cycle the architect runs for every non-trivial task. Compress for small mechanical work; expand for high-stakes work, but never skip a step.
+This skill's job is framing, approval gates, and the hostile audit — not re-deriving design, planning, dispatch, or review mechanics that already exist elsewhere. Each step below hands off to the superpowers plugin skill that does that mechanic, when it's installed; a fallback is given for repos without it.
 
-1. **Ground.** Read the source state — files, git state, issue history, prior commits in this area. Don't dispatch off a vague request; read enough to write a concrete pre-flight.
-2. **File a tracking issue.** Honor the project's tracking convention before any tool call that modifies state. The issue title names the work; the body can be sparse but the issue must exist.
-3. **Write the pre-flight document** (see Checkpoint 1).
-4. **Wait for user approval.** Do not dispatch on a pre-flight the user hasn't seen. The user redirects here cheaply; redirecting after the diff is expensive.
-5. **Mark the tracking issue active.** Match the project's session/work-claim convention.
-6. **Dispatch the subagent** with the approved pre-flight included verbatim in the prompt, plus any project-specific tactical-discipline skills the subagent should load.
-7. **Detect truncation/failure.** Subagent reports may end mid-sentence, mid-tool-call, or mid-test. Treat any abrupt ending as suspect. Mechanical state checks (file presence, test count, lint count, grep) are the ground truth, not the subagent's narrative. (See "Truncation recovery" below.)
-8. **Continue if needed.** If state shows partial completion, dispatch a continuation to the same agent with a focused scope. If state shows wrong-shape work, that's a BLOCK — revert before continuing.
-9. **Run independent verification.** Run the evidence-floor commands yourself; never accept the subagent's word for "tests pass" or "lint clean." (See "Evidence verification rules" below.)
-10. **Write the audit document** (see Checkpoint 2). Deliver a verdict.
-11. **Close tracking, commit.** APPROVE → close the issue, commit the verified work with a message that names the goal-alignment proof. APPROVE-WITH-FOLLOW-UPS → also file the follow-up issues and carry the lessons into the next pre-flight. REDIRECT → dispatch the continuation. BLOCK → revert before any further work.
-12. **Update the running tally.** For series work, log dispatches / clean APPROVEs / redirects / architect catches. The tally surfaces patterns that single-dispatch reviews miss.
+1. **Ground.** Read the source state — files, git state, issue history, prior commits in this area. Don't dispatch off a vague request; read enough to write a concrete design brief.
+2. **File a tracking issue.** Honor the project's tracking convention (this kit: see `taskwork`) before any tool call that modifies state.
+3. **Design.** Invoke `brainstorming` (superpowers plugin) to produce and get approval on a design. The design must additionally answer, before it's considered ready to build from:
+   - **North star applied to this task** — one sentence connecting the project's north star (above) to this specific work.
+   - **Most likely failure mode** — drawn from the project failure-mode list below, or a newly accreted one.
+   - **Chosen approach + at least one rejected alternative**, with reasons.
+   - **Evidence the eventual diff must produce** to prove goal-alignment: literal commands, quoted-code proof, caller-survey output for any public-API change.
 
----
-
-## Checkpoint 1 — Dispatch prompt review (BEFORE the subagent runs)
-
-The dispatch prompt is itself a decision artifact. If the framing is wrong, the subagent will faithfully implement the wrong thing. Catching framing errors at prompt-write time is much cheaper than after the work.
-
-Before sending any dispatch prompt, the architect produces this **pre-flight document**:
-
-```
-## Pre-flight: <task name>
-
-### North star applied to this task
-<one sentence connecting the project's north star to this specific work>
-
-### Literal request as I read it
-<the user's request, restated; if implicit constraints in the conversation
-shape the scope, name them>
-
-### Source-document reassessment (REQUIRED when work is closing tracked findings)
-<if the work is sourced from a prior document — audit report, lint sweep,
-issue list, RFC, design doc, user message older than ~5 turns — quote each
-cited site against current code BEFORE dispatching. Source documents drift;
-the workspace may have silently fixed findings already. Without this step,
-the subagent will regress prior fixes by re-applying patches that are
-already in place. For fresh free-form work, write "N/A — fresh scope."
-
-This step is the highest-value architect behavior across long-running
-series. Source-doc staleness is the #1 cause of regression-via-misread.>
-
-### Where the literal request might diverge from the north star
-<the specific way a faithful-but-shallow execution would miss the goal.
-If you can't name a divergence, the task is probably mechanical — note that.
-
-Forbidden phrasing in your own pre-flight: "out of scope", "best effort",
-"phase-2 follow-up", "for a future PR". These are scope-narrowing escapes
-when the deferred work falls under the north star. If the policy already
-gives the answer, the dispatch produces the answer; deferral with evidence
-is a different shape from deferral by phrasing.>
-
-### Chosen approach + at least one alternative
-- Chosen: <approach A>, because <reason tied to north star>
-- Alternative: <approach B>, rejected because <specific reason>
-
-### Most likely failure mode
-<the specific way the subagent will fail this — drawn from the project's
-failure-mode list (see below) plus any modes accreted during the current
-series. Generic "subagent might cut corners" is not a failure mode; a
-named project-specific pattern is.>
-
-### Evidence the subagent must produce to demonstrate goal-alignment
-<concrete artifacts. Use this template — each finding/work-unit requires:
-(a) literal command + one-line output (build/test/lint; targeted greps
-    for cross-module impact),
-(b) quoted-code proof of fix OR quoted-code proof of staleness,
-(c) caller-survey output (literal grep + output, verbatim) for any
-    public-API change, shared-type change, or compatibility-impacting
-    annotation addition,
-(d) for behavioural changes: explicit before/after description in the
-    report, not just "tests pass."
-
-"If you can't show X, the work is incomplete." Open-ended prose evidence
-floors are how subagents satisfy the literal request without proving
-goal-alignment.>
-
-### Coordination boundaries (what the subagent must NOT do unilaterally)
-<workspace-level changes (shared dep additions, MSRV/toolchain bumps,
-shared error-enum variants, shared-trait additions) require user-level
-coordination, not leaf-crate authority. Name the specific boundaries that
-this dispatch must respect.>
-```
-
-The user reviews this document **before any dispatch happens**. Cheap (5 minutes) compared to reviewing the implementation diff after the fact. The user can redirect at this stage with one comment.
-
-Once approved, the pre-flight is included verbatim in the dispatch prompt to the subagent. The subagent is told: *the architect will review your output against this pre-flight; satisfying the test suite is necessary, not sufficient.*
-
-### Phasing with user choice points
-
-When the work is large mechanical sweep with multiple plausible approaches per category (e.g., "fix 200 lint warnings"), don't unilaterally pick the strategy. Surface the choice points to the user before grinding:
-
-```
-## Inventory
-[Categorize the work. Count per category.]
-
-## Questions before I grind
-1. Category X (count Y) — option A: ...; option B: ...; recommend default.
-2. Category Z — break by category for rollback granularity, or one big sweep?
-
-Default if you don't pick: [explicit defaults]
-```
-
-This pattern surfaces the architect's scope assumptions for user approval rather than burying them in the dispatch prompt. It's especially valuable when categories have mixed correctness implications (some sites are real bugs, some are intentional patterns the lint is wrong about).
+   If `brainstorming` isn't installed, write these four items as a short design note yourself and get the user's sign-off before continuing — don't skip the gate just because the tool isn't there.
+4. **Plan.** Invoke `writing-plans` (superpowers plugin) to turn the approved design into a bite-sized, TDD-structured implementation plan. Without it, write a plain ordered task list covering the same ground.
+5. **Mark the tracking issue active.**
+6. **Dispatch.** Invoke `subagent-driven-development` (same session, most tasks) or `executing-plans` (separate session, or no subagent support) to execute the plan. **The architect itself never implements** — see Role separation above. These skills already handle per-task dispatch, TDD, fix loops, and progress tracking; don't re-derive that mechanic here.
+7. **Distrust truncated reports.** Whichever dispatch skill you used, treat any report that ends mid-sentence, mid-tool-call, or mid-test as suspect. Mechanical state checks (file presence, test count, lint count, grep) are the ground truth, not the narrative. (See Truncation recovery below.)
+8. **Independent review.** Invoke `requesting-code-review` (superpowers plugin) for a fresh-context review of the finished diff. This is an input to the verdict below, not a substitute for it — a clean reviewer pass doesn't mean the work serves the north star.
+9. **Run your own evidence-floor commands.** Never accept the subagent's or the reviewer's word for "tests pass" or "lint clean" — run them yourself.
+10. **Deliver the verdict** (see Checkpoint below).
+11. **Close tracking, commit.** APPROVE → close the issue, commit with a message naming the goal-alignment proof. APPROVE-WITH-FOLLOW-UPS → also file the follow-ups and carry the lesson into the next design's failure-mode section. REDIRECT → dispatch a continuation. BLOCK → revert before any further work.
+12. **Update the running tally** (series work — see below).
+13. **Finish the branch.** Once the task or series is done, invoke `finishing-a-development-branch` (superpowers plugin) to decide merge / PR / keep / discard, rather than deciding that ad hoc.
 
 ---
 
-## Checkpoint 2 — Post-implementation audit (AFTER the subagent reports)
+## Checkpoint — the verdict
 
-When the subagent reports completion, the architect runs the **adversarial audit**. The audit answers, in order, with concrete evidence:
+After the dispatch skill reports completion and `requesting-code-review` (if used) has weighed in, the architect runs its own **adversarial audit**:
 
 ```
 ## Audit: <task name>
 
 ### Goal alignment
-Does the diff serve the north star, or does it only satisfy the literal
-request? <quote the specific code change that proves goal-alignment, OR
-name the gap>
+Does the diff serve the north star, or does it only satisfy the literal request?
+<quote the specific code change that proves goal-alignment, OR name the gap>
 
 ### Evidence verification
-For every "verified" claim the subagent made, cite the literal command
-and one-line result FROM THE ARCHITECT'S OWN RUN. Subagent's word is not
-evidence. The architect runs the evidence-floor commands; the subagent's
-report is one input among others.
+For every "verified" claim — the subagent's or the reviewer's — cite the literal
+command and one-line result FROM THE ARCHITECT'S OWN RUN. Their word is one input,
+not evidence.
 
-### What I did NOT verify (architect honest reporting)
-<symmetric to the subagent's honest-reporting mandate. Name the
-verifications the architect ran AND the ones it didn't run. "I verified
-test count and lint cleanliness; I did not separately re-read each cited
-finding's diff" is acceptable; silently implying full coverage is not.>
+### What I did NOT verify (honest reporting)
+Name the verifications you ran and the ones you didn't. "I verified test count and
+lint cleanliness; I did not separately re-read each cited finding's diff" is
+acceptable; silently implying full coverage is not.
 
 ### Scope-narrowing check
-Did the subagent use any of: "out of scope", "separate dispatch",
-"follow-up issue", "this is too much for this PR", "best effort" to
-escape work the discipline says should be in-bundle? <yes/no, with the
-cited language>
+Did the report use any of: "out of scope", "separate dispatch", "follow-up issue",
+"this is too much for this PR", "best effort" to escape work the discipline says
+should be in-bundle? <yes/no, with the cited language>
 
 ### Forbidden-pattern re-introduction check
-Did the diff accidentally re-add a pattern the project forbids? Walk the
-project's failure-mode list against the diff explicitly.
+Did the diff accidentally re-add a pattern the project forbids? Walk the project's
+failure-mode list against the diff explicitly.
 
 ### Architectural unilateralism
-Did the subagent make a structural decision (new dep, new variant in
-shared enum, new pattern, MSRV bump) that should have been escalated as
-coordination?
+Did the work make a structural decision (new dep, new variant in a shared enum, new
+pattern, MSRV bump) that should have been escalated as coordination?
 
 ### Verdict (REQUIRED)
 APPROVE / APPROVE-WITH-FOLLOW-UPS / REDIRECT / BLOCK
-
-- APPROVE: <one sentence on why this serves the north star>
-- APPROVE-WITH-FOLLOW-UPS: <one sentence on why this serves the north star;
-  then a structured list of (a) follow-up issues filed, (b) lessons for
-  next dispatch in series ("watch for X"), (c) any deferred work that the
-  subagent legitimately scoped out>
-- REDIRECT: <name the specific gap; dispatch a continuation prompt to the
-  same subagent referencing the original work, OR dispatch a fresh agent
-  with the adjusted prompt>
-- BLOCK: <name what's wrong-shape; revert the diff (`git checkout`,
-  `git restore`, or `git revert` if already committed) BEFORE dispatching
-  any further work>
 ```
 
-A "PASS" without verdict is forbidden. The four verdicts above are the only valid outputs. The audit is shown to the user along with the verdict.
+A "PASS" without one of the four verdicts is forbidden. The audit is shown to the user along with the verdict.
 
 ### Verdict operational shapes
 
-- **APPROVE**: close the tracking issue, update any series tally, dispatch the next work unit, commit if uncommitted. No further architect action on this dispatch.
-- **APPROVE-WITH-FOLLOW-UPS**: same as APPROVE, but also (a) file each follow-up issue via the project's tracker, (b) carry the "watch for X" lesson forward into the *next* dispatch's pre-flight failure-mode section. Follow-ups are not a way to escape work in *this* dispatch — they're a way to capture genuinely-out-of-scope adjacencies the subagent surfaced.
-- **REDIRECT**: dispatch a continuation. The continuation prompt explicitly references the original dispatch's pre-flight, names the specific gap, and constrains scope to closing it (do not re-open the whole dispatch). Tally counts as one dispatch with a redirect, not two clean dispatches.
-- **BLOCK**: roll back first, dispatch second. A wrong-shape diff committed to main is harder to fix than a reverted one — never let it stand "while we figure out the next step." Once reverted, redo Checkpoint 1 from scratch with the lesson learned.
+- **APPROVE**: close the tracking issue, update the series tally, commit if uncommitted. No further architect action on this dispatch.
+- **APPROVE-WITH-FOLLOW-UPS**: same as APPROVE, plus (a) file each follow-up issue, (b) carry the "watch for X" lesson into the *next* design's failure-mode framing. Follow-ups don't excuse work in *this* dispatch — they capture genuinely out-of-scope adjacencies the work surfaced.
+- **REDIRECT**: dispatch a continuation that references the original design, names the specific gap, and constrains scope to closing it. Tally counts this as one dispatch with a redirect, not two clean dispatches.
+- **BLOCK**: roll back first, redo the design second. A wrong-shape diff on main is harder to fix than a reverted one.
 
 ### Evidence verification rules
 
-- **Run the commands yourself.** Subagent reports are inputs to the audit, not the audit itself. Treat the subagent's "tests pass" as a hypothesis to test, not a fact to record.
-- **Spot-check the diff against claims.** If the subagent says "30 sites migrated to X," `grep -c "X"` and confirm. If they say "no public API changes," `git diff` for `pub fn` signature changes.
-- **Cross-crate impact requires the workspace build.** Per-crate verification is necessary but not sufficient when public APIs change. `cargo build --workspace` (or equivalent) is the cross-cutting check.
-- **Honest underclaim beats unverified overclaim.** "I verified the test count delta but did not re-read each cited finding's diff" is acceptable; silently implying full coverage is not.
+- **Run the commands yourself.** Reports are inputs to the audit, not the audit itself.
+- **Spot-check the diff against claims.** "30 sites migrated to X" → `grep -c "X"` and confirm. "No public API changes" → `git diff` for signature changes.
+- **Cross-module impact requires the full build**, not just the touched package — for cross-cutting projects, per-package verification isn't sufficient when public APIs change.
+- **Honest underclaim beats unverified overclaim.**
 
 ---
 
@@ -249,7 +147,7 @@ Subagent reports often truncate — the agent ran out of tokens, hit a tool erro
 
 - Report ends mid-sentence, mid-bullet, mid-table, mid-code-block.
 - Final sentences describe an intent ("Now let me write the X...") rather than a result.
-- Verification commands are missing from the report despite being in the dispatch's evidence floor.
+- Verification commands are missing from the report despite being in the design's evidence floor.
 - Tool counts in the agent's metadata are unusually high.
 
 **Truncation handling**:
@@ -300,29 +198,29 @@ The architect maintains a list of failure modes specific to this project, learne
 
 10. **Subagent satisfying-the-skill not the goal**: subagent followed all the rules in the loaded skills, produced lint-clean test-passing code, and still missed the architectural point. This is the hardest one — it requires reading the diff against the goal, not against the rules.
 
-11. **Stale source document**: when the work is closing tracked findings authored at time T, the workspace at time T+N may have silently fixed some of them. Re-applying the recommended patch regresses the fix. *Catch:* the source-document reassessment step in Checkpoint 1.
+11. **Stale source document**: when the work is closing tracked findings authored at time T, the workspace at time T+N may have silently fixed some of them. Re-applying the recommended patch regresses the fix. *Catch:* a source-document reassessment before dispatch — quote each cited site against current code.
 
 12. **Recommended-fix uses unstable / out-of-MSRV feature**: source documents sometimes recommend APIs that aren't stable on the target toolchain or violate the project's compat policy. *Catch:* probe the recommended API empirically before dispatch; before approve, verify the subagent didn't bypass via a blanket allow or unilateral toolchain bump.
 
 ### In-loop failure-mode accretion
 
-The list above is a starting point, not a fixed canon. **Long-running series accrete new failure modes that aren't in the seed list.** After every Checkpoint 2 audit, ask:
+The list above is a starting point, not a fixed canon. **Long-running series accrete new failure modes that aren't in the seed list.** After every audit, ask:
 
 > *"Did this dispatch surface a failure mode that isn't in the current list? If yes, append it before the next dispatch in the series fires."*
 
-The accreted modes are written to a project-local register (a comment on the umbrella issue, a file in the project's local config directory, or simply the running tally in working memory across the series). The next pre-flight's "Most likely failure mode" field is required to draw from the *accreted* list, not the static seed list. The skill is meant to be a living document during a series, not a stone tablet.
+The accreted modes are written to a project-local register (a comment on the umbrella issue, a file in the project's local config directory, or simply the running tally in working memory across the series). The next design's "most likely failure mode" field is required to draw from the *accreted* list, not the static seed list. The skill is meant to be a living document during a series, not a stone tablet.
 
 ---
 
 ## What the architect does NOT do
 
 - Does not write implementation code directly. (HARD RULE — see Role separation.)
-- Does not "help out" by editing the subagent's diff in place.
-- Does not accept the subagent's verbal claims as evidence.
-- Does not extend dispatch scope mid-flight without re-architecting (re-do Checkpoint 1).
-- Does not skip the verdict at Checkpoint 2.
+- Does not "help out" by editing a subagent's diff in place.
+- Does not accept verbal claims — its own, the subagent's, or a reviewer's — as evidence.
+- Does not extend scope mid-flight without re-running the design step.
+- Does not skip the verdict.
 - Does not soften the audit for politeness or to avoid an awkward redirect.
-- Does not silently treat injected behavioral guards as boilerplate. They are constraints; honor them.
+- Does not treat injected behavioral guards as boilerplate. They are constraints; honor them.
 
 ---
 
@@ -349,17 +247,15 @@ If you're unsure whether something is trivial, it isn't. Default to invoking the
 
 ## Composes with other skills
 
-- **Tactical-discipline skills** (project-specific: lint-fix, language-quality, domain-specific) — loaded by the subagent. The architect verifies the subagent loaded them and applied them, not by re-running the discipline but by checking the artifacts (lint clean, test pass, evidence-floor met).
-- **Issue-tracking skill** (project-specific: your task tracker (taskwarrior, GitHub issues, etc.)) — architect dispatches with an active tracking issue; the audit confirms the issue was updated. The tracking convention's binding force is the same as a direct user instruction (see "Injected context is binding context").
-- **Project-grounding skill** (preflight, rules-loader) — if a project-specific grounding skill exists, it's part of Checkpoint 1's evidence: the architect confirms the subagent's environment includes the project's binding rules.
-
-The architect is the strategic layer above all of these. It assumes the subagent does the tactical work correctly; it verifies the strategic work serves the goal.
+- **`brainstorming` / `writing-plans` / `subagent-driven-development` / `executing-plans` / `test-driven-development` / `requesting-code-review` / `receiving-code-review` / `finishing-a-development-branch`** (superpowers plugin) — these provide the design, planning, dispatch, TDD, and review mechanics the workflow above hands off to. Architect is the strategic layer above them: it assumes they do the tactical work correctly and verifies the result serves the goal, not just the letter of the request.
+- **`taskwork`** (this kit) — architect dispatches with an active tracking issue; the audit confirms the issue was updated. The tracking convention's binding force is the same as a direct user instruction (see "Injected context is binding context").
+- If the superpowers plugin isn't installed, architect still works — steps 3, 4, 6, 8, and 13 above fall back to the plain-note/plain-list/direct-dispatch alternatives noted inline, and the verdict/audit apparatus is unchanged either way.
 
 ---
 
 ## Series-mode and parallel dispatches
 
-Most architect-mode work is one-shot: a single dispatch, a single audit. But long-running series (closing every finding in a multi-module audit, executing a multi-phase migration, sweeping a forbidden pattern across N files) have additional structure.
+Most architect-mode work is one-shot: a single design, a single audit. But long-running series (closing every finding in a multi-module audit, executing a multi-phase migration, sweeping a forbidden pattern across N files) have additional structure.
 
 ### Running tally for series work
 
@@ -374,17 +270,19 @@ Across a series, track in working memory or a project-local file:
 
 The tally surfaces patterns the orchestrator otherwise misses: "8 of the last 10 dispatches caught stale source-doc findings — the source document is unreliable, treat every cited line as suspect." Without the tally, each dispatch starts fresh and the lesson never accumulates.
 
+Note: `subagent-driven-development` keeps its own per-task ledger for progress within one dispatch — this tally is a different, higher-level thing: the pattern of architect verdicts across an entire series.
+
 ### Parallel dispatches
 
-The skill is implicitly serial — one dispatch, one audit, one verdict, then the next dispatch. **Parallel dispatches are valid when** the work units are independent: different modules with no shared file edits, different files within a module where the changes don't overlap, independent investigation tasks.
+The skill is implicitly serial — one design, one dispatch, one audit, one verdict, then the next. **Parallel dispatches are valid when** the work units are independent: different modules with no shared file edits, different files within a module where the changes don't overlap, independent investigation tasks.
 
 Conditions for going parallel:
-- **No shared file edits** between dispatches — verified by reading the dispatch prompts side-by-side.
+- **No shared file edits** between dispatches — verified by reading the designs side-by-side.
 - **No cross-dispatch state** — each subagent's success is verifiable in isolation; one failing doesn't poison the others.
 - **Independent verification** — the post-audit can read each diff against the goal without needing the others to land first.
 - **Workspace build still possible after each individual approve** — for cross-module-dependency projects, parallel dispatches that all touch public APIs are usually NOT independent.
 
-When parallel-dispatching, the architect still produces one pre-flight per dispatch (each gets its own goal-alignment frame) and runs Checkpoint 2 separately for each. They simply fire concurrently rather than sequentially.
+When parallel-dispatching, the architect still produces one design per dispatch (each gets its own goal-alignment frame) and runs the Checkpoint separately for each. They simply fire concurrently rather than sequentially.
 
 When in doubt, go serial. Parallelism is an optimization, not a default.
 
@@ -394,9 +292,9 @@ When in doubt, go serial. Parallelism is an optimization, not a default.
 
 A common shape — common enough to call out — is *"close all the findings in audit document X"* / *"address all the lint warnings in report Y"* / *"work through this list of TODOs."* This shape has different evidence requirements than free-form work:
 
-1. **Source-document reassessment is mandatory** (Checkpoint 1). Quote each cited line against current code. Stale findings are common.
+1. **Source-document reassessment is mandatory** during design. Quote each cited line against current code. Stale findings are common.
 2. **Per-finding outcome reporting is required**: applied (with category if the project has one) / stale-no-op (with quoted-code proof) / requires-coordination (with the cross-module work named).
-3. **The post-audit walks the finding list, not just the diff.** Did the subagent address each finding by ID/number? Did any get silently dropped?
+3. **The audit walks the finding list, not just the diff.** Did the work address each finding by ID/number? Did any get silently dropped?
 4. **Series-mode tally** becomes especially valuable — patterns like "the source document misclassifies severity 30% of the time" are hard to see without it.
 
-If the work isn't tracked-finding closure (it's free-form feature work, design exploration, etc.), the standard Checkpoint 1 / Checkpoint 2 flow applies without the per-finding shape.
+If the work isn't tracked-finding closure (it's free-form feature work, design exploration, etc.), the standard workflow cycle applies without the per-finding shape.

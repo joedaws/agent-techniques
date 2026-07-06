@@ -58,4 +58,16 @@ Preflight loaded:
   - Dependencies: package.json (N deps)
 ```
 
-You are now grounded. Proceed with implementation.
+## 6. Hand off to design
+
+You are now grounded, but grounding is not a license to start writing code. For any
+non-trivial creative or behavior-changing work — new functionality, an API change, a
+choice between approaches — invoke the `brainstorming` skill next (from the
+superpowers plugin, if installed) to work through open questions and get an approved
+design before any implementation begins. Only skip straight to implementation for
+mechanical work with no design choice (typo fixes, dependency bumps, single-line
+corrections).
+
+If `brainstorming` isn't installed, write a short note instead covering: what you're
+building, the chosen approach and one rejected alternative, and how you'll know it
+worked — then get the user's sign-off before implementing.
