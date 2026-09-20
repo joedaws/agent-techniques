@@ -64,7 +64,7 @@ If the injected context conflicts with a direct user instruction, surface the co
 This skill's job is framing, approval gates, and the hostile audit — not re-deriving design, planning, dispatch, or review mechanics that already exist elsewhere. Each step below hands off to the superpowers plugin skill that does that mechanic, when it's installed; a fallback is given for repos without it.
 
 1. **Ground.** Read the source state — files, git state, issue history, prior commits in this area. Don't dispatch off a vague request; read enough to write a concrete design brief.
-2. **File a tracking issue.** Honor the project's tracking convention (this kit: see `taskwork`) before any tool call that modifies state.
+2. **File a tracking issue.** Honor the project's tracking convention (this kit: see `use-memory-mechanism`) before any tool call that modifies state.
 3. **Design.** Invoke `brainstorming` (superpowers plugin) to produce and get approval on a design. The design must additionally answer, before it's considered ready to build from:
    - **North star applied to this task** — one sentence connecting the project's north star (above) to this specific work.
    - **Most likely failure mode** — drawn from the project failure-mode list below, or a newly accreted one.
@@ -248,7 +248,7 @@ If you're unsure whether something is trivial, it isn't. Default to invoking the
 ## Composes with other skills
 
 - **`brainstorming` / `writing-plans` / `subagent-driven-development` / `executing-plans` / `test-driven-development` / `requesting-code-review` / `receiving-code-review` / `finishing-a-development-branch`** (superpowers plugin) — these provide the design, planning, dispatch, TDD, and review mechanics the workflow above hands off to. Architect is the strategic layer above them: it assumes they do the tactical work correctly and verifies the result serves the goal, not just the letter of the request.
-- **`taskwork`** (this kit) — architect dispatches with an active tracking issue; the audit confirms the issue was updated. The tracking convention's binding force is the same as a direct user instruction (see "Injected context is binding context").
+- **`use-memory-mechanism`** (this kit) — architect dispatches with an active tracking issue; the audit confirms the issue was updated. The tracking convention's binding force is the same as a direct user instruction (see "Injected context is binding context").
 - If the superpowers plugin isn't installed, architect still works — steps 3, 4, 6, 8, and 13 above fall back to the plain-note/plain-list/direct-dispatch alternatives noted inline, and the verdict/audit apparatus is unchanged either way.
 
 ---

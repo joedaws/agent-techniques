@@ -2,9 +2,9 @@
 Before implementing code in this repo, run the `preflight` skill to load
 the relevant language/quality/rigor rules and project context.
 
-This repo follows the taskwarrior convention for task tracking and
-handoffs (see the `taskwork` skill): find or create a task for your work
-with `task project:<repo> list` / `task add`, read prior handoff
-annotations with `task <id> information`, and leave a `handoff:`
-annotation before ending a session.
+This repo uses a memory mechanism for task tracking and
+handoffs (see the `use-memory-mechanism` skill): find or create a task for your work
+using the mechanism, read prior handoff annotations, and leave a handoff or other
+annotation before ending a session. See the skill for the specific invocation based
+on the memory mechanism loaded.
 <!-- agent-kit:end -->

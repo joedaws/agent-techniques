@@ -95,7 +95,8 @@ All tests must pass before committing.
 
 ## 6. Verify handoff annotated
 
-Check that the active task has a handoff annotation, per the taskwork convention:
+Check that the active task has a handoff annotation, per the use-memory-mechansim convention.
+Which for task warrior would look like:
 
 ```bash
 task project:<repo> +ACTIVE list

@@ -1,9 +1,16 @@
 # agent-techniques
 
-A portable set of Claude Code skills and rules, extracted from a trial of
-[crosslink](https://github.com/dollspace-gay/crosslink). The general-purpose
-parts (language rules, code-quality standards, workflow skills) were very interesting
-so I want to see what it would look like to use a light flow control using TaskWarrior.
+A portable set of Claude Code skills and rules, originally extracted from
+[crosslink](https://github.com/dollspace-gay/crosslink) and extended.
+The general-purpose parts (language rules, code-quality standards, workflow skills)
+were very interesting but I also wanted more control over how these integrated
+with an memory mechanism for agents.
+
+This project abstracts specific memory presistance with the
+`AGENT_TECHNIQUES_MEMORY_MECHANISM` environment variable which is used to tell the
+agents which particular flavor of memory you want to use.
+Whatever is used it should be able to allow agents and humans to share memory between
+sessions for handoff messages or other bits of data that need persisting.
 
 Several files under `skills/` and `rules/` are copied or adapted from
 crosslink (MIT licensed) and stripped of their crosslink-specific coupling;
@@ -13,18 +20,18 @@ see [LICENSE](LICENSE) for the original copyright notice.
 
 ```
 skills/
-  qa/                 quality-assurance pass
-  architect/           strategic dispatch/verification layer
-  maintain/            periodic codebase-health pass
-  review-pre-commit/   pre-commit quality gate
-  dev-release/         changelog + release helper
-  preflight/           load rules + grounding context before implementing
-  taskwork/            taskwarrior convention cheat-sheet
+  qa/                       quality-assurance pass
+  architect/                strategic dispatch/verification layer
+  maintain/                 periodic codebase-health pass
+  review-pre-commit/        pre-commit quality gate
+  dev-release/              changelog + release helper
+  preflight/                load rules + grounding context before implementing
+  use-memory-mechanism/     agent memory use conventions
 rules/
-  quality.md           code-quality standards
-  rigor.md             production-rigor standards
-  web.md               external-content / prompt-injection security protocol
-  languages/           shell, python, javascript(-react), typescript(-react)
+  quality.md                code-quality standards
+  rigor.md                  production-rigor standards
+  web.md                    external-content / prompt-injection security protocol
+  languages/                shell, python, javascript(-react), typescript(-react)
 guides/
   taskwarrior-workflow.md   full taskwarrior convention narrative
 install.sh
@@ -48,11 +55,21 @@ existing files), `--dry-run` (print actions, write nothing).
 After installing, run the `preflight` skill in the target repo to load the
 relevant rules before implementing.
 
-## Taskwarrior convention
+## Agent Techniques Memory Mechanism
 
-This kit has no issue tracker or session manager. Instead, tasks are tracked
-with [taskwarrior](https://taskwarrior.org/) and linked to a repo via
-`project:<repo>`:
+This kit has no specific issue tracker or session manager required. You can use
+hand managed files or a purpose built tool like Linear,
+[taskwarrior](https://taskwarrior.org/), or
+[beads](https://github.com/gastownhall/beads). The key is that you must register
+and explain how to use whatever memory layer.
+
+The key features required of a memory mechansim are
+- creating discrete bits of work to do in a way that persists between sessions
+- a status mechansim on those chunks to mark what is in progress or complete
+- an ability to annotate the descrete work descriptions for the purpose of handoff notes
+
+For example, when using taskwarrior cli, this would look like the following for particular
+project `project:<repo>`:
 
 - **Start:** `task project:<repo> list` (or `task add "<title>"
   project:<repo> +feature` if none exists yet), then `task <id> start`.
@@ -61,8 +78,11 @@ with [taskwarrior](https://taskwarrior.org/) and linked to a repo via
 - **Handoff:** `task <id> annotate "handoff: done=..., next=..., traps=..."`
   before ending a session.
 
-See `guides/taskwarrior-workflow.md` for the full convention, or the
-`taskwork` skill for the condensed command reference.
+A guide file should be written for your choice of memory mechanism. For exaple,
+see `guides/taskwarrior-workflow.md` for the full convention for taskwarrior.
+
+A guide should be created and will then get picked up by the `use-memory-mechansim`
+skill in `skills/use-memory-mechansim/SKILL.md`.
 
 ## Language rules
 

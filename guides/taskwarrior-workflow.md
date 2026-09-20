@@ -75,5 +75,5 @@ future agents can `grep` for intent instead of reading the whole history:
 - `handoff:` — state at the end of a session: what's done, what's next, what
   to watch for
 
-See the [[taskwork]] skill for the condensed, invocable version of this
-convention.
+See the [[use-memory-mechanism]] skill for the condensed version of this
+convention along with high level overview.
