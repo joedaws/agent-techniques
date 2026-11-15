@@ -165,7 +165,8 @@ destructive or outward-facing actions.
 
 ## Phase 2: private repo setup — decisions to make
 
-1. Repo name and owner (e.g. `<you>/life-log`), private, with a README.
+1. Repo name and owner: **decided — `joedaws/agent-techniques-data`**,
+   private, with a README. (Not yet created as of 2026-11-15.)
 2. Claude GitHub App access to it; attach with push access from a session.
 3. Time zone and check-in times (default: weekdays ~8am, Friday ~5pm).
 4. Initial `areas.md`: quarter goals, life areas, tie-breakers.
