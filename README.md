@@ -35,6 +35,7 @@ rules/
   languages/                shell, python, javascript(-react), typescript(-react)
 guides/
   taskwarrior-workflow.md   full taskwarrior convention narrative
+  weekly-companion-design.md  design + usage paradigms for the weekly companion
   phone-weekly-sessions.md  set up week-long voice-driven sessions from the Claude app
 install.sh
 ```
@@ -98,5 +99,6 @@ and reads only the matching rule files from `rules/languages/`.
 Claude app: dictated notes become work/life todos and an effort log, persisted
 to a separate **private** data repo, with ranked priorities on request. It is
 installed into the data repo with its own `scripts/bootstrap.sh`, not
-`install.sh`. Setup: [guides/phone-weekly-sessions.md](guides/phone-weekly-sessions.md).
+`install.sh`. Design: [guides/weekly-companion-design.md](guides/weekly-companion-design.md).
+Setup: [guides/phone-weekly-sessions.md](guides/phone-weekly-sessions.md).
 Tests: `skills/weekly-companion/tests/run-tests.sh`.

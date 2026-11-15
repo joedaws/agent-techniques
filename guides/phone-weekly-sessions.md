@@ -4,7 +4,7 @@ Drive a week-long Claude Code cloud session from the Claude app: dictate
 voice notes as they occur to you, and ask "what are my priorities?" at any
 point. The `weekly-companion` skill turns notes into work/life todos plus an
 effort log, and pushes everything to a **private** data repo after every
-message.
+message. Design rationale: [weekly-companion-design.md](weekly-companion-design.md).
 
 ## Why the pieces fit together this way
 
