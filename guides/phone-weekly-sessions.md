@@ -1,7 +1,8 @@
 # Weekly companion from your phone
 
-Drive a week-long Claude Code cloud session from the Claude app: dictate
-voice notes as they occur to you, and ask "what are my priorities?" at any
+Drive a week-long Claude Code cloud session from the Claude app: use
+voice-to-text in the session's own message box as things occur to you
+(no separate voice app, no audio files), and ask "what are my priorities?" at any
 point. The `weekly-companion` skill turns notes into work/life todos plus an
 effort log, and pushes everything to a **private** data repo after every
 message. Design rationale: [weekly-companion-design.md](weekly-companion-design.md).
@@ -43,8 +44,9 @@ message. Design rationale: [weekly-companion-design.md](weekly-companion-design.
 2. Say yes when it offers check-ins: a weekday-morning priorities prompt and
    a Friday review, created as scheduled tasks that fire into this same
    session.
-3. All week, open that session and **tap the microphone to dictate** (the
-   Claude app's dictation, or your keyboard's). Examples:
+3. All week, open that session, **tap the microphone in the message box,
+   speak, and send**. Each send is one message; one thought or several per
+   message both work. Examples:
    - "Need to email Sam about the contract, and book the vet for Friday."
    - "Done with the contract email. Spent two hours on the migration, stuck on auth."
    - "What are my priorities?" · "What did I actually do on Tuesday?"

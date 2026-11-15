@@ -8,7 +8,9 @@ the agent's instructions are
 
 ## Goals
 
-1. Capture by voice from a phone with near-zero friction: talk, send, done.
+1. Capture by voice from a phone with near-zero friction: voice-to-text
+   directly in the Claude Code session's message box — talk, send, done. No
+   separate recording app, no audio export or upload step.
 2. One conversation per week that accumulates context and can answer
    "what are my priorities for work and life?" at any moment.
 3. Observability: see where effort actually went vs. where you said it should
@@ -21,8 +23,8 @@ what scheduled tasks provide, any code in the data repo.
 ## Architecture
 
 ```
- phone (Claude app, dictation)
-        │  transcript text
+ phone: Claude app → Code session → mic in message box
+        │  voice-to-text → plain text message
         ▼
  weekly cloud session  ──loads──▶  weekly-companion skill (SKILL.md + scripts/)
         │  capture → interpret → echo back

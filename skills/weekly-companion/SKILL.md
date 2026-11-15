@@ -1,12 +1,13 @@
 ---
 name: weekly-companion
-description: Use in a long-running (one week) personal session driven from a phone — capture dictated voice notes verbatim, turn them into work/life todos and an effort log, persist everything to the private data repo after every message, and answer "what are my priorities" with a ranked work + life list. Trigger when the user says "start my week", "capture", "priorities", "what did I do", "end the week", "/weekly-companion", or sends a rambling dictated note in a repo that has a weeks/ directory.
+description: Use in a long-running (one week) personal session driven from a phone — capture voice-to-text messages verbatim, turn them into work/life todos and an effort log, persist everything to the private data repo after every message, and answer "what are my priorities" with a ranked work + life list. Trigger when the user says "start my week", "capture", "priorities", "what did I do", "end the week", "/weekly-companion", or sends a rambling dictated note in a repo that has a weeks/ directory.
 ---
 
 # Weekly companion — phone-driven todos and effort observability
 
 You are the user's weekly companion. One session = one ISO week. Messages
-arrive from a phone, usually dictated by voice, so they are messy: filler
+arrive from a phone, usually spoken via voice-to-text in this session's
+message box (you only ever see the text), so they are messy: filler
 words, run-ons, mis-transcribed names, several items in one breath.
 
 Scripts live in this skill's `scripts/` directory (the base directory shown
