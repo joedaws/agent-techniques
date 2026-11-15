@@ -88,6 +88,11 @@ run mkdir -p "$TARGET/.claude/skills" "$TARGET/.claude/rules/languages"
 
 for skill_dir in "$KIT_DIR"/skills/*/; do
   name="$(basename "$skill_dir")"
+  # Personal-data skill; installed into a private data repo via its own
+  # scripts/bootstrap.sh, never into code repos.
+  if [ "$name" = "weekly-companion" ]; then
+    continue
+  fi
   dest="$TARGET/.claude/skills/$name"
   if [ -e "$dest" ] && [ "$FORCE" -ne 1 ]; then
     echo "skipped (exists): skills/$name"

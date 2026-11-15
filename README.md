@@ -27,6 +27,7 @@ skills/
   dev-release/              changelog + release helper
   preflight/                load rules + grounding context before implementing
   use-memory-mechanism/     agent memory use conventions
+  weekly-companion/         phone-driven weekly todos + effort log (private data repo)
 rules/
   quality.md                code-quality standards
   rigor.md                  production-rigor standards
@@ -34,6 +35,7 @@ rules/
   languages/                shell, python, javascript(-react), typescript(-react)
 guides/
   taskwarrior-workflow.md   full taskwarrior convention narrative
+  phone-weekly-sessions.md  set up week-long voice-driven sessions from the Claude app
 install.sh
 ```
 
@@ -89,3 +91,12 @@ skill in `skills/use-memory-mechansim/SKILL.md`.
 Language rules aren't auto-injected — the `preflight` skill detects the
 project's manifests (`package.json`, `tsconfig.json`, `pyproject.toml`, etc.)
 and reads only the matching rule files from `rules/languages/`.
+
+## Weekly companion (personal todos from your phone)
+
+`skills/weekly-companion/` runs a week-long cloud session you talk to from the
+Claude app: dictated notes become work/life todos and an effort log, persisted
+to a separate **private** data repo, with ranked priorities on request. It is
+installed into the data repo with its own `scripts/bootstrap.sh`, not
+`install.sh`. Setup: [guides/phone-weekly-sessions.md](guides/phone-weekly-sessions.md).
+Tests: `skills/weekly-companion/tests/run-tests.sh`.
